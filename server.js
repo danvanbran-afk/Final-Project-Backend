@@ -17,12 +17,16 @@ app.use(express.json());
 // Parses incoming URL-encoded form data
 app.use(express.urlencoded({ extended: false }));
 
+// --- IMPORT ROUTES HERE ---
+const authRouter = require("./routes/auth.routes");
+app.use("/api/auth", authRouter);
+
 // 5. Basic Health Check Route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Music Review Platform API" });
 });
 
-// 6. Start the Server
+// th6. Start the Server
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
