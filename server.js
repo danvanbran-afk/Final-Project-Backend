@@ -21,6 +21,12 @@ app.use(express.urlencoded({ extended: false }));
 const authRouter = require("./routes/auth.routes");
 app.use("/api/auth", authRouter);
 
+const albumRouter = require("./routes/album.routes");
+app.use("/api/albums", albumRouter);
+
+const reviewRouter = require("./routes/review.routes");
+app.use("/api/reviews", reviewRouter);
+
 // 5. Basic Health Check Route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Music Review Platform API" });
