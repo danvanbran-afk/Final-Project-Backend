@@ -1,70 +1,76 @@
-require("dotenv").config(); // To access your MONGO_URI
+require("dotenv").config();
 const mongoose = require("mongoose");
-const Album = require("./models/Album.model"); // Adjust this path if your model is located elsewhere!
+const bcrypt = require("bcryptjs");
+const Album = require("./models/Album.model");
+const User = require("./models/User.model");
 
-// 1. Define the array of mock data
+const URI = process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb://127.0.0.1:27017/music-review-platform";
+
 const albumsToSeed = [
   {
     title: "Abbey Road",
     artist: "The Beatles",
     genre: "Rock",
-    releaseYear: 1969
+    releaseYear: 1969,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg"
   },
   {
     title: "Thriller",
     artist: "Michael Jackson",
     genre: "Pop",
-    releaseYear: 1982
+    releaseYear: 1982,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/5/55/Michael_Jackson_-_Thriller.png"
   },
   {
     title: "To Pimp a Butterfly",
     artist: "Kendrick Lamar",
-    genre: "Hip Hop",
-    releaseYear: 2015
+    genre: "Hip-Hop", 
+    releaseYear: 2015,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/f/f6/Kendrick_Lamar_-_To_Pimp_a_Butterfly.png"
   },
   {
     title: "Rumours",
     artist: "Fleetwood Mac",
-    genre: "Soft Rock",
-    releaseYear: 1977
+    genre: "Rock",
+    releaseYear: 1977,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/f/fb/FMacRumours.PNG"
   },
   {
     title: "Discovery",
     artist: "Daft Punk",
     genre: "Electronic",
-    releaseYear: 2001
+    releaseYear: 2001,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/a/ae/Daft_Punk_-_Discovery.jpg"
   },
   {
     title: "The Dark Side of the Moon",
     artist: "Pink Floyd",
-    genre: "Progressive Rock",
-    releaseYear: 1973
+    genre: "Rock",
+    releaseYear: 1973,
+    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png"
   }
 ];
 
-// 2. Connect to the database and insert the data
 mongoose
-  .connect(process.env.MONGO_URI)
-  .then((x) => {
+  .connect(URI)
+  .then(async (x) => {
     console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`);
+    await Album.deleteMany({}); 
     
-    // Optional: Clear the collection before seeding to avoid duplicates
-    return Album.deleteMany({}); 
-  })
-  .then(() => {
-    // Insert the array of albums
-    return Album.insertMany(albumsToSeed);
-  })
-  .then((createdAlbums) => {
-    console.log(`Successfully created ${createdAlbums.length} albums!`);
+    let seedAdmin = await User.findOne({ email: "admin@seed.com" });
+    if (!seedAdmin) {
+      const salt = bcrypt.genSaltSync(10);
+      seedAdmin = await User.create({
+        username: "SeedAdmin",
+        email: "admin@seed.com",
+        password: bcrypt.hashSync("dummyhashedpassword123", salt)
+      });
+    }
+
+    const albumsWithOwner = albumsToSeed.map(album => ({ ...album, owner: seedAdmin._id }));
+    const createdAlbums = await Album.insertMany(albumsWithOwner);
+    console.log(`SUCCESS! Inserted ${createdAlbums.length} albums with cover art!`);
     
-    // Disconnect safely once the operation is complete
     return mongoose.connection.close();
   })
-  .then(() => {
-    console.log("Database connection closed.");
-  })
-  .catch((err) => {
-    console.error("Error seeding the database: ", err);
-    mongoose.connection.close();
-  });
+  .catch(err => console.error("Error seeding:", err));

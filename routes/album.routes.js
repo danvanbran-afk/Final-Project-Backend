@@ -1,91 +1,69 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const Album = require("../models/Album.model");
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 
-// POST /api/albums - Create a new album
-router.post("/", isAuthenticated, async (req, res) => {
-  try {
-    const { title, artist, genre, releaseYear, coverImageUrl } = req.body;
-    
-    const newAlbum = await Album.create({
-      title,
-      artist,
-      genre,
-      releaseYear,
-      coverImageUrl,
-      addedBy: req.payload._id // Extracted from the JWT token!
-    });
-    
-    res.status(201).json(newAlbum);
-  } catch (error) {
-    res.status(400).json({ message: "Error creating album", error });
-  }
-});
-
-// GET /api/albums - Get all albums (Public)
+// GET all albums (Public)
 router.get("/", async (req, res) => {
   try {
-    // .populate() fetches the actual user data instead of just the ID
-    const albums = await Album.find().populate("addedBy", "username");
-    res.status(200).json(albums);
+    const albums = await Album.find().populate("owner");
+    res.json(albums);
   } catch (error) {
     res.status(500).json({ message: "Error fetching albums", error });
   }
 });
 
-// GET /api/albums/:albumId - Get a specific album (Public)
-router.get("/:albumId", async (req, res) => {
+// GET specific album by ID (Public)
+router.get("/:id", async (req, res) => {
   try {
-    const { albumId } = req.params;
-    const album = await Album.findById(albumId).populate("addedBy", "username");
+    // FIX: Removed the invalid .populate("reviews") chain that was crashing the server.
+    const album = await Album.findById(req.params.id).populate("owner");
     
     if (!album) {
       return res.status(404).json({ message: "Album not found" });
     }
-    res.status(200).json(album);
+
+    res.json(album);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching album", error });
+    console.error("Error fetching album details:", error);
+    res.status(500).json({ message: "Error fetching album details", error: error.message });
   }
 });
 
-// PUT /api/albums/:albumId - Update a specific album
-router.put("/:albumId", isAuthenticated, async (req, res) => {
-  try {
-    const { albumId } = req.params;
-    
-    const album = await Album.findById(albumId);
-    if (!album) return res.status(404).json({ message: "Album not found" });
-    
-    // Security check: Does the logged-in user own this album?
-    if (album.addedBy.toString() !== req.payload._id) {
-      return res.status(403).json({ message: "Not authorized to edit this album" });
-    }
+// POST create album (Protected)
+router.post("/", isAuthenticated, async (req, res) => {
+  const { title, artist, genre, releaseYear } = req.body;
 
-    const updatedAlbum = await Album.findByIdAndUpdate(albumId, req.body, { new: true });
-    res.status(200).json(updatedAlbum);
+  try {
+    const newAlbum = await Album.create({
+      title,
+      artist,
+      genre,
+      releaseYear: Number(releaseYear),
+      owner: req.payload._id,
+    });
+    res.status(201).json(newAlbum);
   } catch (error) {
-    res.status(400).json({ message: "Error updating album", error });
+    res.status(400).json({ message: "Error creating album. Check required fields.", error: error.message });
   }
 });
 
-// DELETE /api/albums/:albumId - Delete a specific album
-router.delete("/:albumId", isAuthenticated, async (req, res) => {
+// DELETE album (Protected + Strict Owner Validation)
+router.delete("/:id", isAuthenticated, async (req, res) => {
   try {
-    const { albumId } = req.params;
+    const album = await Album.findById(req.params.id);
 
-    const album = await Album.findById(albumId);
-    if (!album) return res.status(404).json({ message: "Album not found" });
-    
-    // Security check: Does the logged-in user own this album?
-    if (album.addedBy.toString() !== req.payload._id) {
-      return res.status(403).json({ message: "Not authorized to delete this album" });
+    if (!album) {
+      return res.status(404).json({ message: "Album not found" });
     }
 
-    await Album.findByIdAndDelete(albumId);
-    res.status(200).json({ message: "Album deleted successfully" });
+    if (album.owner && album.owner.toString() !== req.payload._id) {
+      return res.status(403).json({ message: "Unauthorized: You can only delete your own albums" });
+    }
+
+    await Album.findByIdAndDelete(req.params.id);
+    res.json({ message: "Album deleted successfully" });
   } catch (error) {
-    res.status(400).json({ message: "Error deleting album", error });
+    res.status(500).json({ message: "Error deleting album", error });
   }
 });
 
