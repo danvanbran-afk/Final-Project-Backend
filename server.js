@@ -10,8 +10,10 @@ const cors = require("cors");
 const app = express();
 
 // 4. Configure Middleware
-// Allows our React app (which will run on port 5173) to make requests here
-app.use(cors({ origin: ["http://localhost:5173"] })); 
+// Accept requests from the local React app OR the live Vercel deployment
+const FRONTEND_URL = process.env.ORIGIN || "http://localhost:5173";
+
+app.use(cors({ origin: [FRONTEND_URL] })); 
 // Parses incoming JSON requests
 app.use(express.json()); 
 // Parses incoming URL-encoded form data
@@ -32,7 +34,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Music Review Platform API" });
 });
 
-// th6. Start the Server
+// 6. Start the Server
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
