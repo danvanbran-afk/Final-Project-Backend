@@ -13,7 +13,14 @@ const app = express();
 // Accept requests from the local React app OR the live Vercel deployment
 const FRONTEND_URL = process.env.ORIGIN || "http://localhost:5173";
 
-app.use(cors({ origin: [FRONTEND_URL] })); 
+app.use(
+  cors({ 
+    origin: [
+      FRONTEND_URL, 
+      "https://musicplatform2026.netlify.app"
+    ] 
+  })
+);
 // Parses incoming JSON requests
 app.use(express.json()); 
 // Parses incoming URL-encoded form data
