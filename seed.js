@@ -12,7 +12,7 @@ const albumsToSeed = [
     artist: "The Beatles",
     genre: "Rock",
     releaseYear: 1969,
-    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg"
+    coverImageUrl: "[https://lastfm.freetls.fastly.net/i/u/300x300/c7fd691136c84131af6fcba1dbd3f044.png](https://lastfm.freetls.fastly.net/i/u/300x300/c7fd691136c84131af6fcba1dbd3f044.png)"
   },
   {
     title: "Thriller",
@@ -40,14 +40,14 @@ const albumsToSeed = [
     artist: "Daft Punk",
     genre: "Electronic",
     releaseYear: 2001,
-    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/a/ae/Daft_Punk_-_Discovery.jpg"
+    coverImageUrl: "[https://lastfm.freetls.fastly.net/i/u/300x300/609d171bfd72498dbfffc29618f0a006.png](https://lastfm.freetls.fastly.net/i/u/300x300/609d171bfd72498dbfffc29618f0a006.png)"
   },
   {
     title: "The Dark Side of the Moon",
     artist: "Pink Floyd",
     genre: "Rock",
     releaseYear: 1973,
-    coverImageUrl: "https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png"
+    coverImageUrl: "[https://lastfm.freetls.fastly.net/i/u/300x300/a86f9160d75a40a5812ccfcf9a7c6f06.png](https://lastfm.freetls.fastly.net/i/u/300x300/a86f9160d75a40a5812ccfcf9a7c6f06.png)"
   }
 ];
 
